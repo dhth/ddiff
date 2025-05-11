@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: "/"
+    schedule:
+      interval: monthly
+    reviewers:
+      - "dhth"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    reviewers:
+      - "dhth"
+    labels:
+      - "ci"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
