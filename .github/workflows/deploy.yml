@@ -20,6 +20,10 @@ jobs:
           bun-version-file: ".bun-version"
       - run: bun install
       - run: bun run build
+      - name: Update paths in index html file (for github pages)
+        run: |
+          sed -i '' 's|href="/|href="./|g' dist/index.html
+          sed -i '' 's|src="/|src="./|g' dist/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
