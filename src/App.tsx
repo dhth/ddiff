@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Header from "./Header.tsx";
+import { type Event, Events } from "./Event.tsx";
 
 const debug = false;
 
@@ -24,8 +25,17 @@ function inputsMissing(inputs: Inputs): boolean {
   return inputs.owner == "" || inputs.repo == "";
 }
 
+function eventToString(event: Event): string {
+  const createdAt = event.created_at
+    ? event.created_at.toLocaleTimeString()
+    : "unknown time";
+
+  return `- ${event.type} by @${event.actor.login} at ${createdAt}
+`;
+}
+
 type FetchResult =
-  | { success: true; data: string }
+  | { success: true; data: Event[] }
   | { success: false; error: string };
 
 async function fetchEvents(owner: string, repo: string): Promise<FetchResult> {
@@ -42,19 +52,25 @@ async function fetchEvents(owner: string, repo: string): Promise<FetchResult> {
       };
     }
 
-    const data = await response.text();
-    return { success: true, data };
+    const data = await response.json();
+    const events = Events.safeParse(data);
+    if (!events.success) {
+      return { success: false, error: events.error.toString() };
+    } else {
+      return { success: true, data: events.data };
+    }
   } catch (err) {
     const errorMessage =
-      err instanceof Error ? err.message : "Unknown network error";
-    return { success: false, error: `Network error: ${errorMessage}` };
+      err instanceof Error ? err.message : "Unexpected error";
+
+    return { success: false, error: errorMessage };
   }
 }
 
 function App() {
   const [inputs, setInputs] = useState(initInputs());
   const [fetching, setFetching] = useState(false);
-  const [events, setEvents] = useState<FetchResult | null>(null);
+  const [result, setResult] = useState<FetchResult | null>(null);
 
   const submitDisabled = fetching || inputsMissing(inputs);
 
@@ -75,7 +91,7 @@ function App() {
     e.preventDefault();
     fetchEvents(inputs.owner, inputs.repo).then((results) => {
       setFetching(false);
-      setEvents(results);
+      setResult(results);
     });
   }
 
@@ -96,10 +112,10 @@ fetching  ${fetching}
 
   let resultSection;
 
-  if (events != null) {
-    const [borderClass, contents] = events.success
-      ? ["border-slate-400", events.data]
-      : ["border-red-400", events.error];
+  if (result != null) {
+    const [borderClass, contents] = result.success
+      ? ["border-slate-400", result.data.map(eventToString)]
+      : ["border-red-400", result.error];
 
     resultSection = (
       <div
@@ -113,7 +129,7 @@ fetching  ${fetching}
   return (
     <>
       <div className="min-h-screen bg-zinc-800">
-        <div className="flex flex-col gap-6 w-2/3 max-sm:w-full max-sm:px-4 mx-auto">
+        <div className="py-10 flex flex-col gap-6 w-2/3 max-sm:w-full max-sm:px-4 mx-auto">
           <Header />
           {debugSection}
           <form onSubmit={submitHandler}>
