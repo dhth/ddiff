@@ -3,6 +3,7 @@ alias r := run
 alias b := build
 alias p := preview
 alias l := lint
+alias lf := lint-fix
 alias f := format
 alias fc := format-check
 
@@ -17,6 +18,9 @@ preview:
 
 lint:
     bun run lint
+
+lint-fix:
+    bun run lint-fix
 
 format:
     bun run format
